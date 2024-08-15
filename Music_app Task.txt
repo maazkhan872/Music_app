@@ -1,0 +1,113 @@
+import tkinter as tk
+from tkinter import filedialog
+import pygame
+import os
+
+# Initialize Pygame mixer
+pygame.mixer.init()
+
+class AudioPlayer:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("Minimalist Audio Player")
+
+        self.root.configure(bg='#2E2E2E')  
+
+        self.loaded_track = None
+        self.is_playing = False
+
+        # Create and arrange GUI elements
+        self._setup_widgets()
+
+    def _setup_widgets(self):
+        """Create buttons and labels, and pack them into the window."""
+        # Play button
+        self.play_button = tk.Button(
+            self.root,
+            text="Play",
+            command=self.play_track,
+            bg='#4CAF50', 
+            fg='white',
+            font=('Arial', 14, 'bold'),
+            relief=tk.RAISED
+        )
+        self.play_button.pack(pady=10, fill=tk.X, padx=20)
+
+        # Pause button
+        self.pause_button = tk.Button(
+            self.root,
+            text="Pause",
+            command=self.pause_track,
+            bg='#FFC107',  
+            fg='black',
+            font=('Arial', 14, 'bold'),
+            relief=tk.RAISED
+        )
+        self.pause_button.pack(pady=10, fill=tk.X, padx=20)
+
+        # File selection button
+        self.select_button = tk.Button(
+            self.root,
+            text="Select File",
+            command=self.select_audio,
+            bg='#2196F3',  
+            fg='white',
+            font=('Arial', 14, 'bold'),
+            relief=tk.RAISED
+        )
+        self.select_button.pack(pady=10, fill=tk.X, padx=20)
+
+       
+        self.track_label = tk.Label(
+            self.root,
+            text="No file selected",
+            bg='#2E2E2E',  
+            fg='white',
+            font=('Arial', 16, 'italic')
+        )
+        self.track_label.pack(pady=20)
+
+      
+        self.root.after(100, self.check_audio_events)
+
+    def select_audio(self):
+        
+        file_path = filedialog.askopenfilename(filetypes=[("MP3 Files", "*.mp3")])
+        if file_path:
+            self.loaded_track = file_path
+            self.track_label.config(text=os.path.basename(file_path))
+            pygame.mixer.music.load(self.loaded_track)
+            pygame.mixer.music.set_endevent(pygame.USEREVENT)  
+            self.is_playing = False
+            self.play_button.config(state=tk.NORMAL)
+
+    def play_track(self):
+        
+        if self.loaded_track and not self.is_playing:
+            pygame.mixer.music.play(loops=0) 
+            self.is_playing = True
+            self.play_button.config(text="Playing...", state=tk.DISABLED)
+
+    def pause_track(self):
+        
+        if self.is_playing:
+            pygame.mixer.music.stop()
+            self.is_playing = False
+            self.play_button.config(text="Play", state=tk.NORMAL)
+
+    def check_audio_events(self):
+        
+        for event in pygame.event.get():
+            if event.type == pygame.USEREVENT:  
+                self.is_playing = False
+                self.play_button.config(text="Play", state=tk.NORMAL)
+
+       
+        self.root.after(100, self.check_audio_events)
+
+
+if __name__ == "__main__":
+    root = tk.Tk()
+    app = AudioPlayer(root)
+    root.mainloop()
+
